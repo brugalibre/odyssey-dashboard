@@ -1,0 +1,642 @@
+esphome:
+  name: odyssey
+  on_boot:
+    priority: 200.0
+    then:
+      - component.update: eink_display
+      - wait_until:
+          condition:
+            lambda: 'return id(data_updated) == true;'
+            # Wait a bit longer so all the items are received
+      - delay: 5s
+      - logger.log: "Initial sensor data received: Refreshing display..."
+      - lambda: 'id(initial_data_received) = true;'
+      - script.execute: update_screen
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+ota:
+  - platform: esphome
+    password: ""
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pwd
+  manual_ip: 
+    static_ip: 192.168.0.34
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+    
+  ap: {}
+
+    
+binary_sensor:
+  - platform: homeassistant
+    entity_id: input_boolean.waschmaschine_leerung_ausstehend
+    id: waschmaschine_leerung_ausstehend
+    on_state:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        - logger.log: "Waschmaschine fertig oder entleert"
+        
+  - platform: homeassistant
+    entity_id: binary_sensor.sensor_fenster_buro_contact
+    id: fenster_buero
+    on_state:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        - logger.log: "Bürofenster Sensor update"
+        
+  - platform: homeassistant
+    entity_id: binary_sensor.sensor_fenster_schlafzimmer_contact
+    id: fenster_schlafzimmer
+    on_state:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        - logger.log: "Bürofenster Sensor update"     
+  
+  - platform: homeassistant
+    entity_id: binary_sensor.sensor_fenster_badezimmer_contact
+    id: fenster_badezimmer
+    on_state:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        - logger.log: "Bürofenster Sensor update"
+  
+  - platform: homeassistant
+    entity_id: binary_sensor.sensor_fenster_kinderzimmer_contact
+    id: fenster_kinderzimmer
+    on_state:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        - logger.log: "Bürofenster Sensor update"
+        
+  - platform: homeassistant
+    entity_id: binary_sensor.sensor_fenster_kuche_contact
+    id: fenster_kueche
+    on_state:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        - logger.log: "Bürofenster Sensor update"        
+  - platform: homeassistant
+    entity_id: binary_sensor.sensor_fenster_gaste_wc_contact
+    id: fenster_gaeste_wc
+    on_state:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        - logger.log: "Bürofenster Sensor update" 
+        
+  - platform: homeassistant
+    entity_id: binary_sensor.sensor_fenster_hobbyraum_contact
+    id: fenster_hobbyraum
+    on_state:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        - logger.log: "Bürofenster Sensor update" 
+        
+  - platform: homeassistant
+    entity_id: binary_sensor.sensor_sitzplatztur_wohnzimmer_contact
+    id: sitzplatztuer_wohnzimmer
+    on_state:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        - logger.log: "Bürofenster Sensor update"
+
+sensor:
+
+  - platform: template
+    name: "Odyssey - Display Last Update"
+    device_class: timestamp
+    entity_category: "diagnostic"
+    id: display_last_update
+    
+  - platform: template
+    name: "Odyssey - Recorded Display Refresh"
+    accuracy_decimals: 0
+    unit_of_measurement: "Refreshes"
+    state_class: "total_increasing"
+    entity_category: "diagnostic"
+    lambda: 'return id(recorded_display_refresh);'
+  
+  - platform: wifi_signal
+    name: "Odyssey - WiFi Signal Strength"
+    id: wifisignal
+    unit_of_measurement: "dBm"
+    entity_category: "diagnostic"
+    update_interval: 60s
+    
+  - platform: homeassistant
+    entity_id: sensor.temperatur_sensor_gaste_wc_humidity
+    id: humidity_gaeste_wc
+    accuracy_decimals: 1
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        
+  - platform: homeassistant
+    entity_id: sensor.temperatur_sensor_hobbyraum_temperature
+    id: temperature_hobbyraum
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+
+  - platform: homeassistant
+    entity_id: sensor.temperatur_sensor_hobbyraum_humidity
+    id: humidity_hobbyraum
+    accuracy_decimals: 1
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'        
+        
+  - platform: homeassistant
+    entity_id: sensor.temperatur_sensor_netzwerkraum_temperature
+    id: temperature_netzwerkraum
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+
+  - platform: homeassistant
+    entity_id: sensor.temperatur_sensor_netzwerkraum_humidity
+    id: humidity_netzwerkraum
+    accuracy_decimals: 1
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        
+  - platform: homeassistant
+    entity_id: sensor.temperatur_sensor_gaste_wc_temperature
+    name: "Temperatur Gäste-WC"
+    id: temperature_gaeste_wc
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+    
+  - platform: homeassistant
+    entity_id: sensor.danfoss_icon2_buro_humidity
+    name: "Feuchtigkeit Büro"
+    id: humidity_buero
+    accuracy_decimals: 1
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+    
+  - platform: homeassistant
+    entity_id: sensor.danfoss_icon2_buro_temperature
+    name: "Temperatur Büro"
+    id: temperature_buero
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        
+  - platform: homeassistant
+    entity_id: sensor.danfoss_icon2_wohnzimmer_humidity
+    id: humidity_wohnzimmer
+    accuracy_decimals: 1
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'    
+        
+  - platform: homeassistant
+    entity_id: sensor.danfoss_icon2_wohnzimmer_temperature
+    id: temperature_wohnzimmer
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+               
+  - platform: homeassistant
+    entity_id: sensor.danfoss_icon2_schlafzimmer_humidity
+    id: humidity_schlafzimmer
+    accuracy_decimals: 1
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'    
+        
+  - platform: homeassistant
+    entity_id: sensor.danfoss_icon2_schlafzimmer_temperature
+    id: temperature_schlafzimmer
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+    
+  - platform: homeassistant
+    entity_id: sensor.danfoss_icon2_bad_humidity
+    id: humidity_badezimmer
+    accuracy_decimals: 1
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'    
+        
+  - platform: homeassistant
+    entity_id: sensor.danfoss_icon2_bad_temperature
+    id: temperature_badezimmer
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'  
+        
+  - platform: homeassistant
+    entity_id: sensor.temperatursensor_aussen_humidity
+    id: humidity_aussen
+    accuracy_decimals: 1
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'    
+        
+  - platform: homeassistant
+    entity_id: sensor.temperatursensor_aussen_temperature
+    id: temperature_aussen
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+    
+  - platform: homeassistant
+    entity_id: sensor.danfoss_icon2_kinderzimmer_humidity
+    name: "Feuchtigkeit Kinderzimmer"
+    id: humidity_kinderzimmer
+    accuracy_decimals: 1
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'    
+        
+  - platform: homeassistant
+    entity_id: sensor.danfoss_icon2_kinderzimmer_temperature
+    name: "Temperatur Kinderzimmer"
+    id: temperature_kinderzimmer
+    device_class: "temperature"
+    state_class: "measurement"
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+
+
+# Check whether the display needs to be refreshed every minute,
+# based on whether new data is received or motion is detected. (Thanks @paviro!)
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    on_time:
+      - seconds: 0
+        minutes: /1
+        then:
+          - if:
+              condition:
+                lambda: 'return id(data_updated) == true;'
+              then:
+                - script.execute: update_screen
+                - logger.log: "Sensor data updated and activity in home detected: Refreshing display..."
+              else:
+                - logger.log: "No sensors updated - skipping display refresh."
+
+# Global variables for detecting if the display needs to be refreshed. (Thanks @paviro!)
+globals:
+  - id: data_updated
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: initial_data_received
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: recorded_display_refresh
+    type: int
+    restore_value: yes
+    initial_value: '0'
+    
+# Script for updating screen - Refresh display and publish refresh count and time. (Thanks @paviro!)
+script:
+  - id: update_screen
+    then:
+      - lambda: 'id(data_updated) = false;'
+      - component.update: eink_display
+      - lambda: 'id(recorded_display_refresh) += 1;'
+      - lambda: 'id(display_last_update).publish_state(id(homeassistant_time).now().timestamp);'
+
+# Include custom fonts
+font:
+  - file: 'fonts/GothamRnd-Book.ttf'
+    id: font_small_book
+    size: 18
+    glyphsets: 
+      - GF_Latin_African
+    glyphs: [' ', '-', '°']
+  - file: 'fonts/GothamRnd-Bold.ttf'
+    id: font_title
+    size: 40
+    glyphsets: 
+      - GF_Latin_African    
+    glyphs: [ 
+    "üöéÜÖÉ "
+    ]
+  - file: 'fonts/GothamRnd-Bold.ttf'
+    id: font_smaller_bold
+    size: 10
+    glyphsets: 
+      - GF_Latin_African
+    glyphs: [' ', '-', '°']
+    
+  - file: 'fonts/GothamRnd-Bold.ttf'
+    id: font_small_bold
+    size: 18
+    glyphsets: 
+      - GF_Latin_African
+    glyphs: [' ', '-', '°']
+    
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: mat_icon_big
+    size: 45
+    glyphs: [ 
+    "\U000F0FD1", # bed-king-outline
+    "\U000F04DE", # stove
+    "\U000F09A1", # shower head
+    "\U000F156D", # sofa-outline
+    "\U000F09AB", # toilet
+    "\U000F0F48", # chari-roling
+    "\U000F18FB", # teddy-bear
+    "\U000F07F4", # television-classic
+    "\U000F048D", # server-network
+    "\U000F12D3", # garage-variant
+    "\U000F0E69", # tree
+    ]
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: mat_icon_small
+    size: 18
+    glyphs: [ 
+    "\U000F050F", # temperature
+    "\U000F058E", # water-percent
+    "\U000F06D9", # garage
+    "\U000F05B1", # window-open
+    "\U000F072A", # washing-machine
+    ]
+
+# Define colors
+# This design is white on black so this is necessary.
+color:
+  - id: color_black
+    red: 0%
+    green: 0%
+    blue: 0%
+    white: 0%
+  - id: color_white
+    red: 100%
+    green: 100%
+    blue: 100%
+    white: 100%
+  - id: color_red
+    red: 100%
+
+# Pins for Waveshare ePaper ESP Board
+spi:
+  clk_pin: GPIO13
+  mosi_pin: GPIO14
+
+# Now render everything on the ePaper screen.
+display:
+  - platform: waveshare_epaper
+    id: eink_display
+    cs_pin: GPIO15
+    dc_pin: GPIO27
+    busy_pin: GPIO25
+    #busy_pin:
+     #number: GPIO25
+     #inverted: True
+    reset_pin: GPIO26
+    reset_duration: 2ms
+    model: 7.50in-bV3-bwr
+    update_interval: never
+    lambda: |-        
+        int iconBigWidth = 50;
+        int iconBigHeight = 50;
+        int iconSmallWidth = 18;
+        int iconSmallDoubleLineOffset = 2;
+        
+        int yAxisLineIncrement = 35;
+        int yAxisRoomIncrement = 45;
+        int yAxisHeaderPadding = 25 + yAxisRoomIncrement;
+        int yAxisIconOffset = 8;
+        int xAxis2ndLineOffset = (3 * iconBigHeight / 4);
+        int xAxisLineRoomLength = 230;
+        int xAxisLineTempLength = 85;
+        int xAxisLevelMarkerLength = 440;
+        
+        int xPadding = (it.get_width() / 4) - 15;
+        int yPadding=25;
+        int textPadding = xPadding + iconBigWidth + 5;
+        
+        // the current position of the line on the y-axis
+        int yAxisLineCurPos = yPadding + 50;
+        
+        if (!id(initial_data_received)) {
+          it.printf(xPadding, it.get_height() / 2, id(font_title), color_red, "Lade Daten...");
+        } else {
+          // from x=0, y=0 to X=400, y=475
+          it.printf(xPadding, yPadding, id(font_title), color_red, "In da Haus");
+              
+          //// Obergeschoss
+          it.line(xPadding + 90, yAxisLineCurPos + 6, xPadding + xAxisLevelMarkerLength, yAxisLineCurPos + 6);
+          it.printf(xPadding, yAxisLineCurPos, id(font_smaller_bold), "Obergeschoss");
+          yAxisLineCurPos+=5;
+          
+          // Büro 
+          it.printf(xPadding, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F0F48");
+          if (id(fenster_buero).state) {
+            iconSmallDoubleLineOffset = 4;
+            it.printf(textPadding, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
+            it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Fenster offen!");
+          }
+          it.printf(textPadding, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
+          it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_buero).state);
+          it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F058E");
+          it.printf(textPadding + iconSmallWidth + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f%%", id(humidity_buero).state);
+          
+          
+          // Kinderzimmer
+          it.printf(xPadding + xAxisLineRoomLength, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F18FB");
+          iconSmallDoubleLineOffset = 2;
+          if (id(fenster_kinderzimmer).state) {
+           iconSmallDoubleLineOffset = 4;
+           it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
+           it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Fenster offen!");
+          }
+          it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
+          it.printf(textPadding + iconSmallWidth + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_kinderzimmer).state);
+          it.printf(textPadding + xAxisLineRoomLength + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F058E");
+          it.printf(textPadding + iconSmallWidth + xAxisLineRoomLength + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f%%", id(humidity_kinderzimmer).state);
+          yAxisLineCurPos+= yAxisRoomIncrement;
+                  
+          // Badezimmer
+          iconSmallDoubleLineOffset = 2;
+          it.printf(xPadding, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F09A1");
+          if (id(fenster_badezimmer).state) {
+            iconSmallDoubleLineOffset = 4;
+            it.printf(textPadding, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
+            it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Fenster offen!");
+          }
+          
+          it.printf(textPadding, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
+          it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_badezimmer).state);
+          it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F058E");
+          it.printf(textPadding + iconSmallWidth + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f%%", id(humidity_badezimmer).state);
+                  
+          // Schlafzimmer
+          it.printf(xPadding + xAxisLineRoomLength, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F0FD1");
+          iconSmallDoubleLineOffset = 2;
+          if (id(fenster_schlafzimmer).state) {
+            iconSmallDoubleLineOffset = 4;
+            it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
+            it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Fenster offen: %s", "id(fenster_schlafzimmer).state");
+          }
+          it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
+          it.printf(textPadding + iconSmallWidth + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_schlafzimmer).state);
+          it.printf(textPadding + xAxisLineRoomLength + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F058E");
+          it.printf(textPadding + iconSmallWidth + xAxisLineRoomLength + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f%%", id(humidity_schlafzimmer).state);
+          
+          //// Erdgeschoss
+          yAxisLineCurPos+=yAxisHeaderPadding;
+          it.line(xPadding + 80, yAxisLineCurPos + 6, xPadding + xAxisLevelMarkerLength, yAxisLineCurPos + 6);
+          it.printf(xPadding, yAxisLineCurPos, id(font_smaller_bold), "Erdgeschoss");
+          yAxisLineCurPos+=5;
+          
+          // Gäste-WC
+          it.printf(xPadding, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F09AB");
+          iconSmallDoubleLineOffset = 2;
+          if (id(fenster_gaeste_wc).state) {
+            iconSmallDoubleLineOffset = 4;
+            it.printf(textPadding, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
+            it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Fenster offen!");
+          }
+          it.printf(textPadding, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
+          it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_gaeste_wc).state);
+          it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F058E");
+          it.printf(textPadding + iconSmallWidth + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f%%", id(humidity_gaeste_wc).state);
+          
+          // Küche
+          it.printf(xPadding + xAxisLineRoomLength, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F04DE");
+          iconSmallDoubleLineOffset = 2;
+          if (id(fenster_kueche).state) {
+            iconSmallDoubleLineOffset = 4;
+            it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
+            it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Fenster offen!");
+          }
+          it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
+          it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_wohnzimmer).state);
+          it.printf(textPadding + xAxisLineRoomLength + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F058E");
+          it.printf(textPadding + iconSmallWidth + xAxisLineRoomLength + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f%%", id(humidity_wohnzimmer).state);
+          yAxisLineCurPos+= yAxisRoomIncrement;
+                  
+          // Wohnzimmer
+          it.printf(xPadding, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F156D");
+          iconSmallDoubleLineOffset = 2;
+          if (id(sitzplatztuer_wohnzimmer).state) {
+            iconSmallDoubleLineOffset = 4;
+            it.printf(textPadding, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
+            it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Sitzplatztüre offen!");
+          }
+          it.printf(textPadding, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
+          it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_wohnzimmer).state);
+          it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F058E");
+          it.printf(textPadding + iconSmallWidth + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f%%", id(humidity_wohnzimmer).state);
+          
+          //// Untergeschoss
+          yAxisLineCurPos+=yAxisHeaderPadding;
+          it.line(xPadding + 90, yAxisLineCurPos + 6, xPadding + xAxisLevelMarkerLength, yAxisLineCurPos + 6);
+          it.printf(xPadding, yAxisLineCurPos, id(font_smaller_bold), "Untergeschoss");
+          yAxisLineCurPos+=5;
+          
+          // Hobbyraum
+          it.printf(xPadding, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F07F4");
+          iconSmallDoubleLineOffset = 2;
+          if (id(fenster_hobbyraum).state) {
+            iconSmallDoubleLineOffset = 4;
+            it.printf(textPadding, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
+            it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Fenster offen!");
+          }
+          
+          it.printf(textPadding, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
+          it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_hobbyraum).state);
+          it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F058E");
+          it.printf(textPadding + iconSmallWidth + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f%%", id(humidity_hobbyraum).state);
+          
+          // Netzwerkraum/Waschraum
+          iconSmallDoubleLineOffset = 2;
+          it.printf(xPadding + xAxisLineRoomLength, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F048D");
+          if (id(waschmaschine_leerung_ausstehend).state) {
+            iconSmallDoubleLineOffset = 4;
+            it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F072A");
+            it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Waschmaschine fertig!");
+          }
+          it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
+          it.printf(textPadding + iconSmallWidth + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_netzwerkraum).state);
+          it.printf(textPadding + xAxisLineRoomLength + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F058E");
+          it.printf(textPadding + iconSmallWidth + xAxisLineRoomLength + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f%%", id(humidity_netzwerkraum).state);
+          
+          //// Draussen
+          yAxisLineCurPos+=yAxisHeaderPadding;
+          it.line(xPadding + 55, yAxisLineCurPos + 6, xPadding + xAxisLevelMarkerLength, yAxisLineCurPos + 6);
+          it.printf(xPadding, yAxisLineCurPos, id(font_smaller_bold), "Draussen");
+          yAxisLineCurPos+=5;
+          
+          // Sitzplatz
+          it.printf(xPadding, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F0E69");
+          it.printf(textPadding, yAxisLineCurPos + (iconBigHeight / 2), id(mat_icon_small), "%s", "\U000F050F");
+          it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), "%.1f°C", id(temperature_aussen).state);
+          it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / 2), id(mat_icon_small), "%s", "\U000F058E");
+          it.printf(textPadding + iconSmallWidth + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), "%.1f%%", id(humidity_aussen).state);
+          
+          // Garage
+          it.printf(xPadding + xAxisLineRoomLength, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F12D3");
+          it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), "Tor geschlossen");
+        }
+        
+captive_portal:
