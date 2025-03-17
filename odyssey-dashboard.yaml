@@ -112,8 +112,23 @@ binary_sensor:
         - lambda: 'id(data_updated) = true;'
         - logger.log: "Bürofenster Sensor update"
 
-sensor:
+text_sensor:
 
+  - platform: homeassistant
+    entity_id: sensor.garage_tor_garage_door_status
+    id: garagentor
+    filters:
+       - map:
+         - "open -> Geöffnet"
+         - "opening -> Öffnet"
+         - "closing -> Schliesst"
+         - "closed -> Geschlossen"
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+        - logger.log: "Garagentor Sensor update"
+
+sensor:        
   - platform: template
     name: "Odyssey - Display Last Update"
     device_class: timestamp
@@ -478,10 +493,14 @@ display:
         int yAxisLineCurPos = yPadding + 50;
         
         if (!id(initial_data_received)) {
-          it.printf(xPadding, it.get_height() / 2, id(font_title), color_red, "Lade Daten...");
+          it.fill(color_black);
+          it.printf((it.get_width() / 2) - 20, it.get_height() / 2, id(font_title), color_white, "Sensoren werden ausgelesen...");
         } else {
+        
+          //////// Übersicht Temperatur/Fenster //////////////
+        
           // from x=0, y=0 to X=400, y=475
-          it.printf(xPadding, yPadding, id(font_title), color_red, "In da Haus");
+          it.printf(xPadding, yPadding, id(font_title), color_red, "In da House");
               
           //// Obergeschoss
           it.line(xPadding + 90, yAxisLineCurPos + 6, xPadding + xAxisLevelMarkerLength, yAxisLineCurPos + 6);
@@ -499,7 +518,6 @@ display:
           it.printf(textPadding + iconSmallWidth, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_buero).state);
           it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F058E");
           it.printf(textPadding + iconSmallWidth + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f%%", id(humidity_buero).state);
-          
           
           // Kinderzimmer
           it.printf(xPadding + xAxisLineRoomLength, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F18FB");
@@ -535,7 +553,7 @@ display:
           if (id(fenster_schlafzimmer).state) {
             iconSmallDoubleLineOffset = 4;
             it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
-            it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Fenster offen: %s", "id(fenster_schlafzimmer).state");
+            it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "%s", "Fenster offen");
           }
           it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
           it.printf(textPadding + iconSmallWidth + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_schlafzimmer).state);
@@ -636,7 +654,11 @@ display:
           
           // Garage
           it.printf(xPadding + xAxisLineRoomLength, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F12D3");
-          it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), "Tor geschlossen");
+          it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), "Tor: %s", id(garagentor).state.c_str());
+          
+          
+          //////// Statistische Infos //////////////          
+          //it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos, id(font_smaller_bold), "Letztes Update: %s", id(display_last_update).state);
         }
         
 captive_portal:
