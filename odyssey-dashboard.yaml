@@ -119,16 +119,24 @@ text_sensor:
     id: garagentor
     filters:
        - map:
-         - "open -> Geöffnet"
-         - "opening -> Öffnet"
-         - "closing -> Schliesst"
-         - "closed -> Geschlossen"
+         - "open -> geöffnet"
+         - "opening -> öffnet"
+         - "closing -> schliesst"
+         - "closed -> geschlossen"
     on_value:
       then:
         - lambda: 'id(data_updated) = true;'
         - logger.log: "Garagentor Sensor update"
 
-sensor:        
+sensor:
+    
+  - platform: homeassistant
+    entity_id: sensor.garage_tor_garage_door_position
+    id: garage_tor_position
+    on_value:
+      then:
+        - lambda: 'id(data_updated) = true;'
+    
   - platform: template
     name: "Odyssey - Display Last Update"
     device_class: timestamp
@@ -154,6 +162,7 @@ sensor:
     entity_id: sensor.temperatur_sensor_gaste_wc_humidity
     id: humidity_gaeste_wc
     accuracy_decimals: 1
+    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -165,6 +174,7 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
+    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -174,6 +184,7 @@ sensor:
     entity_id: sensor.temperatur_sensor_hobbyraum_humidity
     id: humidity_hobbyraum
     accuracy_decimals: 1
+    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -185,6 +196,7 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
+    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -194,6 +206,7 @@ sensor:
     entity_id: sensor.temperatur_sensor_netzwerkraum_humidity
     id: humidity_netzwerkraum
     accuracy_decimals: 1
+    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -206,6 +219,7 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
+    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -216,6 +230,7 @@ sensor:
     name: "Feuchtigkeit Büro"
     id: humidity_buero
     accuracy_decimals: 1
+    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -228,6 +243,7 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
+    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -237,6 +253,7 @@ sensor:
     entity_id: sensor.danfoss_icon2_wohnzimmer_humidity
     id: humidity_wohnzimmer
     accuracy_decimals: 1
+    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -248,6 +265,7 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
+    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -257,6 +275,7 @@ sensor:
     entity_id: sensor.danfoss_icon2_schlafzimmer_humidity
     id: humidity_schlafzimmer
     accuracy_decimals: 1
+    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -268,6 +287,7 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
+    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -277,6 +297,7 @@ sensor:
     entity_id: sensor.danfoss_icon2_bad_humidity
     id: humidity_badezimmer
     accuracy_decimals: 1
+    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -288,6 +309,7 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
+    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -297,6 +319,7 @@ sensor:
     entity_id: sensor.temperatursensor_aussen_humidity
     id: humidity_aussen
     accuracy_decimals: 1
+    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -308,6 +331,7 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
+    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -318,6 +342,7 @@ sensor:
     name: "Feuchtigkeit Kinderzimmer"
     id: humidity_kinderzimmer
     accuracy_decimals: 1
+    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -330,6 +355,7 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
+    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -438,12 +464,12 @@ font:
 # Define colors
 # This design is white on black so this is necessary.
 color:
-  - id: color_black
+  - id: color_white
     red: 0%
     green: 0%
     blue: 0%
     white: 0%
-  - id: color_white
+  - id: color_black
     red: 100%
     green: 100%
     blue: 100%
@@ -653,8 +679,16 @@ display:
           it.printf(textPadding + iconSmallWidth + xAxisLineTempLength, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), "%.1f%%", id(humidity_aussen).state);
           
           // Garage
+          //string garagenTorText = id(garagentor).state.c_str();
           it.printf(xPadding + xAxisLineRoomLength, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F12D3");
-          it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), "Tor: %s", id(garagentor).state.c_str());
+          
+          //if (strcmp(id(garagentor).state.c_str(), "Geschlossen")) {
+          if (id(garage_tor_position).state > 0) {
+            it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / 2), id(mat_icon_small), color_red, "%s", "\U000F06D9");
+            it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), color_red, "Tor %s!", id(garagentor).state.c_str());
+          } else {
+            it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), color_black, "Tor %s", id(garagentor).state.c_str());
+          }
           
           
           //////// Statistische Infos //////////////          
