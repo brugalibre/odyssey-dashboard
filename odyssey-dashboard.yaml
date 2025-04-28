@@ -162,7 +162,6 @@ sensor:
     entity_id: sensor.temperatur_sensor_gaste_wc_humidity
     id: humidity_gaeste_wc
     accuracy_decimals: 1
-    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -174,7 +173,6 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
-    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -184,7 +182,6 @@ sensor:
     entity_id: sensor.temperatur_sensor_hobbyraum_humidity
     id: humidity_hobbyraum
     accuracy_decimals: 1
-    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -196,7 +193,6 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
-    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -206,7 +202,6 @@ sensor:
     entity_id: sensor.temperatur_sensor_netzwerkraum_humidity
     id: humidity_netzwerkraum
     accuracy_decimals: 1
-    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -219,7 +214,6 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
-    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -230,7 +224,6 @@ sensor:
     name: "Feuchtigkeit Büro"
     id: humidity_buero
     accuracy_decimals: 1
-    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -243,7 +236,6 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
-    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -253,7 +245,6 @@ sensor:
     entity_id: sensor.danfoss_icon2_wohnzimmer_humidity
     id: humidity_wohnzimmer
     accuracy_decimals: 1
-    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -265,7 +256,6 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
-    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -275,7 +265,6 @@ sensor:
     entity_id: sensor.danfoss_icon2_schlafzimmer_humidity
     id: humidity_schlafzimmer
     accuracy_decimals: 1
-    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -287,7 +276,6 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
-    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -297,7 +285,6 @@ sensor:
     entity_id: sensor.danfoss_icon2_bad_humidity
     id: humidity_badezimmer
     accuracy_decimals: 1
-    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -309,7 +296,6 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
-    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -319,7 +305,6 @@ sensor:
     entity_id: sensor.temperatursensor_aussen_humidity
     id: humidity_aussen
     accuracy_decimals: 1
-    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
@@ -331,7 +316,6 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
-    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -342,12 +326,11 @@ sensor:
     name: "Feuchtigkeit Kinderzimmer"
     id: humidity_kinderzimmer
     accuracy_decimals: 1
-    update_interval: 1200s
     unit_of_measurement: "%"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'    
-        
+        - lambda: 'id(data_updated) = true;'
+ 
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_kinderzimmer_temperature
     name: "Temperatur Kinderzimmer"
@@ -355,7 +338,6 @@ sensor:
     device_class: "temperature"
     state_class: "measurement"
     accuracy_decimals: 1
-    update_interval: 400s
     unit_of_measurement: "°C"
     on_value:
       then:
@@ -489,13 +471,13 @@ display:
     cs_pin: GPIO15
     dc_pin: GPIO27
     busy_pin: GPIO25
-    #busy_pin:
-     #number: GPIO25
-     #inverted: True
     reset_pin: GPIO26
     reset_duration: 2ms
-    model: 7.50in-bV3-bwr
+    #reset_duration: 200ms
     update_interval: never
+    #model: 7.50inV2p
+    model: 7.50in-bV3-bwr
+    #full_update_every: 3600
     lambda: |-        
         int iconBigWidth = 50;
         int iconBigHeight = 50;
@@ -692,7 +674,7 @@ display:
           
           
           //////// Statistische Infos //////////////          
-          //it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos, id(font_smaller_bold), "Letztes Update: %s", id(display_last_update).state);
+          it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos, id(font_smaller_bold), "Letztes Update: %s", id(display_last_update).state);
         }
         
 captive_portal:
