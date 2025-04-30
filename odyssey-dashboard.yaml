@@ -526,7 +526,7 @@ display:
           yAxisLineCurPos+=5;
           
           // Büro 
-          it.printf(xPadding, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F0F48");
+          it.printf(xPadding, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F1239");
           if (id(fenster_buero).state) {
             iconSmallDoubleLineOffset = 4;
             it.printf(textPadding, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
