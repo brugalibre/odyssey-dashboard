@@ -6,12 +6,12 @@ esphome:
       - component.update: eink_display
       - wait_until:
           condition:
-            lambda: 'return id(data_updated) == true;'
+            lambda: 'return id(initial_data_received) == true || id(require_update_display) == true;'
             # Wait a bit longer so all the items are received
       - delay: 5s
       - logger.log: "Initial sensor data received: Refreshing display..."
       - lambda: 'id(initial_data_received) = true;'
-      - script.execute: update_screen
+      - script.execute: update_display
 
 esp32:
   board: esp32dev
@@ -23,7 +23,6 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: ""
 
 ota:
   - platform: esphome
@@ -31,7 +30,7 @@ ota:
 
 wifi:
   ssid: !secret wifi_ssid
-  password: !secret wifi_pwd
+  password: !secret wifi_password
   manual_ip: 
     static_ip: 192.168.0.34
     gateway: 192.168.0.1
@@ -41,17 +40,16 @@ wifi:
 
     
 binary_sensor:
-
   - platform: homeassistant
-    entity_id: binary_sensor.bewegungssensor_odyssey_occupancy
-    id: bewegungssensor_odyssey
-    
+    entity_id: binary_sensor.bewegungssensor_kuche_oder_eingang
+    id: bewegungssensor_kuche_oder_eingang
+
   - platform: homeassistant
     entity_id: input_boolean.waschmaschine_leerung_ausstehend
     id: waschmaschine_leerung_ausstehend
     on_state:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(require_update_display) = true;'
         - logger.log: "Waschmaschine fertig oder entleert"
         
   - platform: homeassistant
@@ -59,7 +57,7 @@ binary_sensor:
     id: fenster_buero
     on_state:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(require_update_display) = true;'
         - logger.log: "Bürofenster Sensor update"
         
   - platform: homeassistant
@@ -67,23 +65,23 @@ binary_sensor:
     id: fenster_schlafzimmer
     on_state:
       then:
-        - lambda: 'id(data_updated) = true;'
-        - logger.log: "Bürofenster Sensor update"     
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Fenster Schlafzimmer Sensor update"     
   
   - platform: homeassistant
     entity_id: binary_sensor.sensor_fenster_badezimmer_contact
     id: fenster_badezimmer
     on_state:
       then:
-        - lambda: 'id(data_updated) = true;'
-        - logger.log: "Bürofenster Sensor update"
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Fenster Badezimmer Sensor update"
   
   - platform: homeassistant
     entity_id: binary_sensor.sensor_fenster_kinderzimmer_contact
     id: fenster_kinderzimmer
     on_state:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(require_update_display) = true;'
         - logger.log: "Bürofenster Sensor update"
         
   - platform: homeassistant
@@ -91,34 +89,81 @@ binary_sensor:
     id: fenster_kueche
     on_state:
       then:
-        - lambda: 'id(data_updated) = true;'
-        - logger.log: "Bürofenster Sensor update"        
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Küchenfenster Sensor update"        
   - platform: homeassistant
     entity_id: binary_sensor.sensor_fenster_gaste_wc_contact
     id: fenster_gaeste_wc
     on_state:
       then:
-        - lambda: 'id(data_updated) = true;'
-        - logger.log: "Bürofenster Sensor update" 
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Fenster Gäste-WC Sensor update" 
         
   - platform: homeassistant
     entity_id: binary_sensor.sensor_fenster_hobbyraum_contact
     id: fenster_hobbyraum
     on_state:
       then:
-        - lambda: 'id(data_updated) = true;'
-        - logger.log: "Bürofenster Sensor update" 
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Fenster Hobbyraum Sensor update"
+
+  - platform: homeassistant
+    entity_id: input_boolean.helfer_bad_temperatur_warnung_bei_offenem_fenster
+    id: temperatur_warnung_bad
+    on_state:
+      then:
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Temperatur-Warnung Bad update"
+
+  - platform: homeassistant
+    entity_id: input_boolean.helfer_schlafzimmer_temperatur_warnung_bei_offenem_fenster
+    id: temperatur_warnung_schlafzimmer
+    on_state:
+      then:
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Temperatur-Warnung Schlafzimmer update"
+
+  - platform: homeassistant
+    entity_id: input_boolean.helfer_buro_temperatur_warnung_bei_offenem_fenster
+    id: temperatur_warnung_buro
+    on_state:
+      then:
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Temperatur-Warnung Büro update"
+
+  - platform: homeassistant
+    entity_id: input_boolean.helfer_kinderzimmer_temperatur_warnung_bei_offenem_fensten
+    id: temperatur_warnung_kinderzimmer
+    on_state:
+      then:
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Temperatur-Warnung Kinderzimmer update"
+
+  - platform: homeassistant
+    entity_id: input_boolean.helfer_gaste_wc_temperatur_warnung_bei_offenem_fenster
+    id: temperatur_warnung_gaeste_wc
+    on_state:
+      then:
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Temperatur-Warnung Gäste-WC update"
+
+  - platform: homeassistant
+    entity_id: input_boolean.helfer_wohnzimmer_temperatur_warnung_bei_offenem_fensten
+    id: temperatur_warnung_wohnzimmer_kueche
+    on_state:
+      then:
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Temperatur-Warnung Wohnzimmer/Küche update"
         
   - platform: homeassistant
     entity_id: binary_sensor.sensor_sitzplatztur_wohnzimmer_contact
     id: sitzplatztuer_wohnzimmer
     on_state:
       then:
-        - lambda: 'id(data_updated) = true;'
-        - logger.log: "Bürofenster Sensor update"
+        - lambda: 'id(require_update_display) = true;'
+        - logger.log: "Sitzplatztür Sensor update"
 
 text_sensor:
-
   - platform: homeassistant
     entity_id: sensor.garage_tor_garage_door_status
     id: garagentor
@@ -130,23 +175,22 @@ text_sensor:
          - "closed -> geschlossen"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(require_update_display) = true;'
         - logger.log: "Garagentor Sensor update"
 
 sensor:
-    
   - platform: homeassistant
     entity_id: sensor.garage_tor_garage_door_position
     id: garage_tor_position
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(require_update_display) = true;'
     
   - platform: template
     name: "Odyssey - Display Last Update"
     device_class: timestamp
     entity_category: "diagnostic"
-    id: display_last_update
+    lambda: 'return id(display_last_update);'
     
   - platform: template
     name: "Odyssey - Recorded Display Refresh"
@@ -170,7 +214,7 @@ sensor:
     unit_of_measurement: "%"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
         
   - platform: homeassistant
     entity_id: sensor.temperatur_sensor_hobbyraum_temperature
@@ -181,7 +225,7 @@ sensor:
     unit_of_measurement: "°C"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
 
   - platform: homeassistant
     entity_id: sensor.temperatur_sensor_hobbyraum_humidity
@@ -190,7 +234,7 @@ sensor:
     unit_of_measurement: "%"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'        
+        - lambda: 'id(initial_data_received) = true;'  
         
   - platform: homeassistant
     entity_id: sensor.temperatur_sensor_netzwerkraum_temperature
@@ -201,7 +245,7 @@ sensor:
     unit_of_measurement: "°C"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
 
   - platform: homeassistant
     entity_id: sensor.temperatur_sensor_netzwerkraum_humidity
@@ -210,7 +254,7 @@ sensor:
     unit_of_measurement: "%"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
         
   - platform: homeassistant
     entity_id: sensor.temperatur_sensor_gaste_wc_temperature
@@ -222,7 +266,7 @@ sensor:
     unit_of_measurement: "°C"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
     
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_buro_humidity
@@ -232,7 +276,7 @@ sensor:
     unit_of_measurement: "%"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
     
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_buro_temperature
@@ -244,7 +288,7 @@ sensor:
     unit_of_measurement: "°C"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
         
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_wohnzimmer_humidity
@@ -253,7 +297,7 @@ sensor:
     unit_of_measurement: "%"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'    
+        - lambda: 'id(initial_data_received) = true;'
         
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_wohnzimmer_temperature
@@ -264,7 +308,7 @@ sensor:
     unit_of_measurement: "°C"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
                
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_schlafzimmer_humidity
@@ -273,7 +317,7 @@ sensor:
     unit_of_measurement: "%"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'    
+        - lambda: 'id(initial_data_received) = true;'
         
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_schlafzimmer_temperature
@@ -284,7 +328,7 @@ sensor:
     unit_of_measurement: "°C"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
     
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_bad_humidity
@@ -293,7 +337,7 @@ sensor:
     unit_of_measurement: "%"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'    
+        - lambda: 'id(initial_data_received) = true;'
         
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_bad_temperature
@@ -304,7 +348,7 @@ sensor:
     unit_of_measurement: "°C"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'  
+        - lambda: 'id(initial_data_received) = true;'
         
   - platform: homeassistant
     entity_id: sensor.temperatursensor_aussen_humidity
@@ -313,7 +357,7 @@ sensor:
     unit_of_measurement: "%"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'    
+        - lambda: 'id(initial_data_received) = true;'
         
   - platform: homeassistant
     entity_id: sensor.temperatursensor_aussen_temperature
@@ -324,7 +368,7 @@ sensor:
     unit_of_measurement: "°C"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
     
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_kinderzimmer_humidity
@@ -334,7 +378,7 @@ sensor:
     unit_of_measurement: "%"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
+        - lambda: 'id(initial_data_received) = true;'
  
   - platform: homeassistant
     entity_id: sensor.danfoss_icon2_kinderzimmer_temperature
@@ -346,35 +390,11 @@ sensor:
     unit_of_measurement: "°C"
     on_value:
       then:
-        - lambda: 'id(data_updated) = true;'
-
-
-# Check whether the display needs to be refreshed every minute,
-# based on whether new data is received or motion is detected. (Thanks @paviro!)
-time:
-  - platform: homeassistant
-    id: homeassistant_time
-    on_time:
-      - seconds: 10
-        then:
-          - if:
-              condition:
-                lambda: 'return id(data_updated) == true;'
-              then:
-                - if:
-                    condition:
-                      binary_sensor.is_on: bewegungssensor_odyssey
-                    then:
-                      - logger.log: "Sensor data updated and activity in home detected: Refreshing display..."
-                      - script.execute: update_screen
-                    else:
-                      - logger.log: "Sensor data updated but no activity in home - skipping display refresh."
-              else:
-                - logger.log: "No sensors updated - skipping display refresh."
+        - lambda: 'id(initial_data_received) = true;'
 
 # Global variables for detecting if the display needs to be refreshed. (Thanks @paviro!)
 globals:
-  - id: data_updated
+  - id: require_update_display
     type: bool
     restore_value: no
     initial_value: 'false'
@@ -382,19 +402,66 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
+  - id: display_last_update
+    type: long long int
+    initial_value: '0'
   - id: recorded_display_refresh
     type: int
     restore_value: yes
     initial_value: '0'
-    
+
+# Check whether the display needs to be refreshed every 30s,
+# based on whether new data is received or motion is detected. (Thanks @paviro!)
+time:
+  - platform: sntp
+    id: sntp_time
+  - platform: homeassistant
+    id: homeassistant_time
+    on_time:
+      - seconds: 30
+        then:
+          - script.execute: check_display_last_update
+          - script.execute: check_if_update_display_required
+
 # Script for updating screen - Refresh display and publish refresh count and time. (Thanks @paviro!)
 script:
-  - id: update_screen
+  - id: check_display_last_update
     then:
-      - lambda: 'id(data_updated) = false;'
+      - if:
+          condition:
+            binary_sensor.is_on: bewegungssensor_kuche_oder_eingang
+          then:
+            - if:
+                condition:
+                  lambda: 'return id(display_last_update) < id(sntp_time).now().timestamp - (30 * 60);'
+                then:
+                  - logger.log: 'Interval checking, update display'
+                  - lambda: 'id(require_update_display) = true;'
+
+  - id: check_if_update_display_required
+    then: 
+      - if:
+          condition:
+            lambda: 'return id(require_update_display) == true;'
+          then:
+            - if:
+                condition:
+                  binary_sensor.is_on: bewegungssensor_kuche_oder_eingang
+                then:
+                  - logger.log: "Sensor data updated and activity in home detected: Refreshing display..."
+                  - script.execute: update_display
+                else:
+                  - logger.log: "Sensor data updated but no activity in home - skipping display refresh."
+          else:
+            - logger.log: "No sensors updated - skipping display refresh." 
+
+  - id: update_display
+    then:
+      - lambda: |-
+            id(require_update_display) = false;
+            id(display_last_update) = id(sntp_time).now().timestamp;
       - component.update: eink_display
       - lambda: 'id(recorded_display_refresh) += 1;'
-      - lambda: 'id(display_last_update).publish_state(id(homeassistant_time).now().timestamp);'
 
 # Include custom fonts
 font:
@@ -482,12 +549,9 @@ display:
     dc_pin: GPIO27
     busy_pin: GPIO25
     reset_pin: GPIO26
-    reset_duration: 2ms
-    #reset_duration: 200ms
+    reset_duration: 200ms
     update_interval: never
-    #model: 7.50inV2p
     model: 7.50in-bV3-bwr
-    #full_update_every: 3600
     lambda: |-        
         int iconBigWidth = 50;
         int iconBigHeight = 50;
@@ -513,10 +577,9 @@ display:
         if (!id(initial_data_received)) {
           it.fill(color_black);
           it.printf((it.get_width() / 2) - 200, it.get_height() / 2, id(font_title), color_white, "Sensoren werden ausgelesen...");
-        } else {
-        
+        } else {        
           //////// Übersicht Temperatur/Fenster //////////////
-        
+      
           // from x=0, y=0 to X=400, y=475
           it.printf(xPadding, yPadding, id(font_title), color_red, "In da House");
               
@@ -541,9 +604,9 @@ display:
           it.printf(xPadding + xAxisLineRoomLength, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F18FB");
           iconSmallDoubleLineOffset = 2;
           if (id(fenster_kinderzimmer).state) {
-           iconSmallDoubleLineOffset = 4;
-           it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
-           it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Fenster offen!");
+            iconSmallDoubleLineOffset = 4;
+            it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos - (yAxisIconOffset / 4) + xAxis2ndLineOffset, id(mat_icon_small), color_red, "%s", "\U000F05B1");
+            it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + xAxis2ndLineOffset, id(font_small_bold), color_red, "Fenster offen!");
           }
           it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(mat_icon_small), "%s", "\U000F050F");
           it.printf(textPadding + iconSmallWidth + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / iconSmallDoubleLineOffset), id(font_small_bold), "%.1f°C", id(temperature_kinderzimmer).state);
@@ -674,17 +737,19 @@ display:
           //string garagenTorText = id(garagentor).state.c_str();
           it.printf(xPadding + xAxisLineRoomLength, yAxisLineCurPos + yAxisIconOffset, id(mat_icon_big), "%s", "\U000F12D3");
           
-          //if (strcmp(id(garagentor).state.c_str(), "Geschlossen")) {
           if (id(garage_tor_position).state > 0) {
             it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / 2), id(mat_icon_small), color_red, "%s", "\U000F06D9");
             it.printf(textPadding + xAxisLineRoomLength + iconSmallWidth, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), color_red, "Tor %s!", id(garagentor).state.c_str());
           } else {
             it.printf(textPadding + xAxisLineRoomLength, yAxisLineCurPos + (iconBigHeight / 2), id(font_small_bold), color_black, "Tor %s", id(garagentor).state.c_str());
           }
-          
-          
-          //////// Statistische Infos //////////////          
-          it.printf(textPadding + xAxisLineTempLength, yAxisLineCurPos, id(font_smaller_bold), "Letztes Update: %s", id(display_last_update).state);
+                    
+          //////// Statistische Infos //////////////
+          yAxisLineCurPos+=(yAxisHeaderPadding / 2) + 15;
+          // https://community.home-assistant.io/t/storing-time-t-to-flash/564613/4"
+          char str[17];
+          strftime(str, sizeof(str), "%d.%m.%Y %H:%M:%S", localtime(&id(display_last_update)));
+          it.printf(60, yAxisLineCurPos, id(font_smaller_bold), "%s", str);
         }
-        
+
 captive_portal:
